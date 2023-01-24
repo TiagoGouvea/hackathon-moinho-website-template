@@ -34,8 +34,11 @@ export default async function handler(
       await doc.useServiceAccountAuth(
         JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
       );
+      console.log('doc', JSON.stringify(doc));
     } catch (error) {
-      return res.status(500).json({message: 'First', error});
+      return res
+        .status(500)
+        .json({message: 'First', doc: JSON.stringify(doc), error});
     }
 
     try {
