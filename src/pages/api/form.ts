@@ -37,13 +37,17 @@ export default async function handler(
       JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')['private_key'],
       'https://www.googleapis.com/auth/spreadsheets'
     );
-    console.log('auth', auth);
     // const client = await auth.getClient();
     const googleSheet = google.sheets({version: 'v4', auth});
     const spreadsheetId = process.env.GOOGLE_SHEET_ID || '';
 
+    const ress = await googleSheet.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Sheet1!A:B'
+    });
+    return res.status(200).json({data: ress.data});
+
     await googleSheet.spreadsheets.values.append({
-      auth,
       spreadsheetId,
       range: 'Sheet1!A2:B',
       valueInputOption: 'USER_ENTERED',
