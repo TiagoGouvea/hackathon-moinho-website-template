@@ -26,13 +26,20 @@ export default async function handler(
     // Verify if name is valid
     if (!name) return res.status(400).json({error: {message: 'Nome inválido'}});
 
-    const auth = new google.auth.GoogleAuth({
-      scopes: 'https://www.googleapis.com/auth/spreadsheets',
-      // keyFile: 'C:/Users/jp_ba/Downloads/hackathon-moinho-3d68a768aca4.json'
-      credentials: JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
-    });
-    const client = await auth.getClient();
-    const googleSheet = google.sheets({version: 'v4', auth: client});
+    // const auth = new google.auth.GoogleAuth({
+    //   scopes: 'https://www.googleapis.com/auth/spreadsheets',
+    //   // keyFile: 'C:/Users/jp_ba/Downloads/hackathon-moinho-3d68a768aca4.json'
+    //   credentials: JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
+    // });
+    const auth = new google.auth.JWT(
+      JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')['client_email'],
+      undefined,
+      JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')['private_key'],
+      'https://www.googleapis.com/auth/spreadsheets'
+    );
+    console.log('auth', auth);
+    // const client = await auth.getClient();
+    const googleSheet = google.sheets({version: 'v4', auth});
     const spreadsheetId = process.env.GOOGLE_SHEET_ID || '';
 
     await googleSheet.spreadsheets.values.append({
