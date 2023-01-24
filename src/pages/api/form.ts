@@ -27,23 +27,40 @@ export default async function handler(
     if (!name) return res.status(400).json({error: {message: 'Nome inválido'}});
 
     const sheetId = process.env.GOOGLE_SHEET_ID || '';
+    let doc;
 
-    const doc = new GoogleSpreadsheet(sheetId);
-    await doc.useServiceAccountAuth(
-      JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
-    );
+    try {
+      doc = new GoogleSpreadsheet(sheetId);
+      await doc.useServiceAccountAuth(
+        JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
+      );
+    } catch (error) {
+      return res.status(500).json({message: 'First', error});
+    }
 
-    await doc.loadInfo();
+    try {
+      await doc.loadInfo();
+    } catch (error) {
+      return res.status(500).json({message: 'Second', error});
+    }
+    let sheet;
+    try {
+      sheet = doc.sheetsByIndex[0];
+      await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Data']);
+    } catch (error) {
+      return res.status(500).json({message: 'Third', error});
+    }
 
-    const sheet = doc.sheetsByIndex[0];
-    await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Data']);
-
-    await sheet.addRow({
-      Nome: name,
-      Email: parsedEmail,
-      Telefone: phone,
-      Data: new Date().toString()
-    });
+    try {
+      await sheet.addRow({
+        Nome: name,
+        Email: parsedEmail,
+        Telefone: phone,
+        Data: new Date().toString()
+      });
+    } catch (error) {
+      return res.status(500).json({message: 'Fourth', error});
+    }
 
     return res.status(200).json(true);
   } catch (e) {
