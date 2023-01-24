@@ -31,6 +31,7 @@ export default async function handler(
     //   // keyFile: 'C:/Users/jp_ba/Downloads/hackathon-moinho-3d68a768aca4.json'
     //   credentials: JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
     // });
+    // console.log('key', process.env.GOOGLE_SHEET_API_CONFIG);
     const auth = new google.auth.JWT(
       JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')['client_email'],
       undefined,
@@ -41,11 +42,11 @@ export default async function handler(
     const googleSheet = google.sheets({version: 'v4', auth});
     const spreadsheetId = process.env.GOOGLE_SHEET_ID || '';
 
-    const ress = await googleSheet.spreadsheets.values.get({
-      spreadsheetId,
-      range: 'Sheet1!A:B'
-    });
-    return res.status(200).json({data: ress.data});
+    // const ress = await googleSheet.spreadsheets.values.get({
+    //   spreadsheetId,
+    //   range: 'Sheet1!A:B'
+    // });
+    // return res.status(200).json({data: ress.data});
 
     await googleSheet.spreadsheets.values.append({
       spreadsheetId,
