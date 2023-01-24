@@ -1,5 +1,5 @@
-import type {NextApiRequest, NextApiResponse} from 'next';
 import {GoogleSpreadsheet} from 'google-spreadsheet';
+import type {NextApiRequest, NextApiResponse} from 'next';
 
 export default async function handler(
   _req: NextApiRequest,
@@ -26,23 +26,22 @@ export default async function handler(
     // Verify if name is valid
     if (!name) return res.status(400).json({error: {message: 'Nome inválido'}});
 
-    const sheetId = process.env.GOOGLE_SHEET_ID || '';
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID || '';
 
-    const doc = new GoogleSpreadsheet(sheetId);
-    doc.useServiceAccountAuth(
+    const doc = new GoogleSpreadsheet(spreadsheetId);
+    await doc.useServiceAccountAuth(
       JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
     );
 
     await doc.loadInfo();
 
     const sheet = doc.sheetsByIndex[0];
-    await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Label', 'Data']);
+    await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Data']);
 
     await sheet.addRow({
       Nome: name,
       Email: parsedEmail,
       Telefone: phone,
-      Label: 'Interessado',
       Data: new Date().toString()
     });
 
