@@ -29,7 +29,7 @@ export default async function handler(
     const sheetId = process.env.GOOGLE_SHEET_ID || '';
 
     const doc = new GoogleSpreadsheet(sheetId);
-    doc.useServiceAccountAuth(
+    await doc.useServiceAccountAuth(
       JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
     );
 
@@ -47,7 +47,6 @@ export default async function handler(
 
     return res.status(200).json(true);
   } catch (e) {
-    console.log('error sending', e);
     return res.status(500).json({error: e});
   }
 }
