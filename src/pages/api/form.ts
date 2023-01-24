@@ -30,11 +30,7 @@ export default async function handler(
 
     const doc = new GoogleSpreadsheet(sheetId);
     await doc.useServiceAccountAuth(
-      // JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
-      {
-        client_email: process.env.GOOGLE_EMAIL || '',
-        private_key: process.env.GOOGLE_PRIVATE_KEY || ''
-      }
+      JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
     );
 
     await doc.loadInfo();
