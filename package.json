@@ -19,6 +19,7 @@
     "bootstrap": "^4.6.0",
     "framer-motion": "^6.5.1",
     "google-spreadsheet": "^3.3.0",
+    "googleapis": "^110.0.0",
     "next": "^12.3.1",
     "node-sass": "^6.0.1",
     "prettier": "^2.3.2",

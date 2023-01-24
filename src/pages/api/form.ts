@@ -1,5 +1,6 @@
 import type {NextApiRequest, NextApiResponse} from 'next';
 import {GoogleSpreadsheet} from 'google-spreadsheet';
+import {google} from 'googleapis';
 
 export default async function handler(
   _req: NextApiRequest,
@@ -26,44 +27,61 @@ export default async function handler(
     // Verify if name is valid
     if (!name) return res.status(400).json({error: {message: 'Nome inválido'}});
 
-    const sheetId = process.env.GOOGLE_SHEET_ID || '';
-    let doc;
+    const auth = new google.auth.GoogleAuth({
+      scopes: 'https://www.googleapis.com/auth/spreadsheets',
+      // keyFile: 'C:/Users/jp_ba/Downloads/hackathon-moinho-3d68a768aca4.json'
+      credentials: JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
+    });
+    const client = await auth.getClient();
+    const googleSheet = google.sheets({version: 'v4', auth: client});
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID || '';
 
-    try {
-      doc = new GoogleSpreadsheet(sheetId);
-      await doc.useServiceAccountAuth(
-        JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
-      );
-      console.log('doc', JSON.stringify(doc));
-    } catch (error) {
-      return res
-        .status(500)
-        .json({message: 'First', doc: JSON.stringify(doc), error});
-    }
+    await googleSheet.spreadsheets.values.append({
+      auth,
+      spreadsheetId,
+      range: 'Sheet1!A2:B',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[name, parsedEmail, phone, new Date().toString()]]
+      }
+    });
+    // let doc;
 
-    try {
-      await doc.loadInfo();
-    } catch (error) {
-      return res.status(500).json({message: 'Second', error});
-    }
-    let sheet;
-    try {
-      sheet = doc.sheetsByIndex[0];
-      await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Data']);
-    } catch (error) {
-      return res.status(500).json({message: 'Third', error});
-    }
+    // try {
+    //   doc = new GoogleSpreadsheet(sheetId);
+    //   await doc.useServiceAccountAuth(
+    //     JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
+    //   );
+    //   console.log('doc', JSON.stringify(doc));
+    // } catch (error) {
+    //   return res
+    //     .status(500)
+    //     .json({message: 'First', doc: JSON.stringify(doc), error});
+    // }
 
-    try {
-      await sheet.addRow({
-        Nome: name,
-        Email: parsedEmail,
-        Telefone: phone,
-        Data: new Date().toString()
-      });
-    } catch (error) {
-      return res.status(500).json({message: 'Fourth', error});
-    }
+    // try {
+    //   await doc.loadInfo();
+    // } catch (error) {
+    //   return res.status(500).json({message: 'Second', error});
+    // }
+    // let sheet;
+    // try {
+    //   sheet = doc.sheetsByIndex[0];
+    //   await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Data']);
+    // } catch (error) {
+    //   return res.status(500).json({message: 'Third', error});
+    // }
+
+    // try {
+    //   await sheet.addRow({
+    // Nome: name,
+    // Email: parsedEmail,
+    // Telefone: phone,
+    // Data: new Date().toString()
+    //   });
+    // } catch (error) {
+    //   return res.status(500).json({message: 'Fourth', error});
+    // }
 
     return res.status(200).json(true);
   } catch (e) {
