@@ -1,5 +1,5 @@
-import {GoogleSpreadsheet} from 'google-spreadsheet';
 import type {NextApiRequest, NextApiResponse} from 'next';
+import {google} from 'googleapis';
 
 export default async function handler(
   _req: NextApiRequest,
@@ -26,23 +26,43 @@ export default async function handler(
     // Verify if name is valid
     if (!name) return res.status(400).json({error: {message: 'Nome inválido'}});
 
-    const spreadsheetId = process.env.GOOGLE_SHEET_ID || '';
+    const config = JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}');
 
-    const doc = new GoogleSpreadsheet(spreadsheetId);
-    await doc.useServiceAccountAuth(
-      JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
+    const auth = new google.auth.JWT(
+      config['client_email'],
+      undefined,
+      config['private_key'],
+      'https://www.googleapis.com/auth/spreadsheets'
     );
 
-    await doc.loadInfo();
+    const googleSheet = google.sheets({version: 'v4', auth});
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID || '';
 
-    const sheet = doc.sheetsByIndex[0];
-    await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Data']);
+    await googleSheet.spreadsheets.values.append({
+      auth,
+      spreadsheetId,
+      valueInputOption: 'USER_ENTERED',
+      range: 'Sheet1!A:B',
+      requestBody: {
+        values: [[name, parsedEmail, phone, new Date().toString()]]
+      }
+    });
 
-    await sheet.addRow({
-      Nome: name,
-      Email: parsedEmail,
-      Telefone: phone,
-      Data: new Date().toString()
+    await googleSheet.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            autoResizeDimensions: {
+              dimensions: {
+                dimension: 'COLUMNS',
+                startIndex: 0,
+                endIndex: 5
+              }
+            }
+          }
+        ]
+      }
     });
 
     return res.status(200).json(true);
