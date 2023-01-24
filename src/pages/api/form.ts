@@ -36,18 +36,18 @@ export default async function handler(
     await doc.loadInfo();
 
     const sheet = doc.sheetsByIndex[0];
-    await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Label', 'Data']);
+    await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Data']);
 
     await sheet.addRow({
       Nome: name,
       Email: parsedEmail,
       Telefone: phone,
-      Label: 'Interessado',
       Data: new Date().toString()
     });
 
     return res.status(200).json(true);
   } catch (e) {
+    console.log('error sending', e);
     return res.status(500).json({error: e});
   }
 }
