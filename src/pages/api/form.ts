@@ -1,5 +1,5 @@
+import {GoogleSpreadsheet} from 'google-spreadsheet';
 import type {NextApiRequest, NextApiResponse} from 'next';
-import {google} from 'googleapis';
 
 export default async function handler(
   _req: NextApiRequest,
@@ -32,67 +32,48 @@ export default async function handler(
     //   credentials: JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
     // });
     // console.log('key', process.env.GOOGLE_SHEET_API_CONFIG);
-    const auth = new google.auth.JWT(
-      JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')['client_email'],
-      undefined,
-      JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')['private_key'],
-      'https://www.googleapis.com/auth/spreadsheets'
-    );
-    // const client = await auth.getClient();
-    const googleSheet = google.sheets({version: 'v4', auth});
+    // const auth = new google.auth.JWT(
+    //   JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')['client_email'],
+    //   undefined,
+    //   JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')['private_key'],
+    //   'https://www.googleapis.com/auth/spreadsheets'
+    // );
+    // // const client = await auth.getClient();
+    // const googleSheet = google.sheets({version: 'v4', auth});
+
+    // // const ress = await googleSheet.spreadsheets.values.get({
+    // //   spreadsheetId,
+    // //   range: 'Sheet1!A:B'
+    // // });
+    // // return res.status(200).json({data: ress.data});
+
+    // await googleSheet.spreadsheets.values.append({
+    //   spreadsheetId,
+    //   valueInputOption: 'USER_ENTERED',
+    //   requestBody: {
+    //     values: [[name, parsedEmail, phone, new Date().toString()]]
+    //   }
+    // });
+
     const spreadsheetId = process.env.GOOGLE_SHEET_ID || '';
 
-    // const ress = await googleSheet.spreadsheets.values.get({
-    //   spreadsheetId,
-    //   range: 'Sheet1!A:B'
-    // });
-    // return res.status(200).json({data: ress.data});
+    const doc = new GoogleSpreadsheet(spreadsheetId);
+    await doc.useServiceAccountAuth(
+      JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
+    );
+    console.log('doc', JSON.stringify(doc));
 
-    await googleSheet.spreadsheets.values.append({
-      spreadsheetId,
-      range: 'Sheet1!A2:B',
-      valueInputOption: 'USER_ENTERED',
-      requestBody: {
-        values: [[name, parsedEmail, phone, new Date().toString()]]
-      }
+    await doc.loadInfo();
+
+    const sheet = doc.sheetsByIndex[0];
+    await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Data']);
+
+    await sheet.addRow({
+      Nome: name,
+      Email: parsedEmail,
+      Telefone: phone,
+      Data: new Date().toString()
     });
-    // let doc;
-
-    // try {
-    //   doc = new GoogleSpreadsheet(sheetId);
-    //   await doc.useServiceAccountAuth(
-    //     JSON.parse(process.env.GOOGLE_SHEET_API_CONFIG || '{}')
-    //   );
-    //   console.log('doc', JSON.stringify(doc));
-    // } catch (error) {
-    //   return res
-    //     .status(500)
-    //     .json({message: 'First', doc: JSON.stringify(doc), error});
-    // }
-
-    // try {
-    //   await doc.loadInfo();
-    // } catch (error) {
-    //   return res.status(500).json({message: 'Second', error});
-    // }
-    // let sheet;
-    // try {
-    //   sheet = doc.sheetsByIndex[0];
-    //   await sheet.setHeaderRow(['Nome', 'Email', 'Telefone', 'Data']);
-    // } catch (error) {
-    //   return res.status(500).json({message: 'Third', error});
-    // }
-
-    // try {
-    //   await sheet.addRow({
-    // Nome: name,
-    // Email: parsedEmail,
-    // Telefone: phone,
-    // Data: new Date().toString()
-    //   });
-    // } catch (error) {
-    //   return res.status(500).json({message: 'Fourth', error});
-    // }
 
     return res.status(200).json(true);
   } catch (e) {
